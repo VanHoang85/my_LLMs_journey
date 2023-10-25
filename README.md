@@ -61,7 +61,7 @@ Due to these difficulties, one will eventually move from hard prompts (i.e., man
 
 ### What is it?
 
-<img width="500" alt="vanilla FT versus instruction FT" src="https://github.com/VanHoang85/my_LLMs_journey/assets/38503004/c53c5d4d-88ca-4422-b8d7-f87efa93ac8d">
+<img width="600" alt="vanilla FT versus instruction FT" src="https://github.com/VanHoang85/my_LLMs_journey/assets/38503004/c53c5d4d-88ca-4422-b8d7-f87efa93ac8d">
 
 As depicted in the above figure on the left, vanilla FT for classification tasks on BERT/LSTM/RNN models requires having data points as pairs of <input, output>. After encoding the entire input sequence, BERT makes use of the first token of the last hidden state, aka the classification token <cls>, putting it through a softmax layer to obtain the prediction. The predictions are of numeric value and we thus need to map it to a label (e.g., positive or negative or neutral).
 
@@ -73,9 +73,13 @@ When using LLMs, all tasks are framed as generation problem, including classific
 
 A task's instruction can be formulatted in different ways. For sentiment analysis, some examples are shown below, in which besides the wording of task, one can specify the output space as a list of labels, elaborate it with information, and/or make it like a cloze test. 
 
-`Predict the sentiment of the following text: <input_text>. Options are “positive”, “negative”, or “neutral”.`
-`What is the sentiment of the review? Choose “positive” if the customer likes the place, “negative” if the customer hates it, and “neutral” if there is no information. Review: <input_text>. Answer:`
-`Review: <input_text>. Select the correct sentiment of the review: (a) positive (good responses from customers), (b) negative (bad responses from customers), (c) neutral (no information available).`
+```
+1. Predict the sentiment of the following text: <input_text>. Options are “positive”, “negative”, or “neutral”.
+
+2. What is the sentiment of the review? Choose “positive” if the customer likes the place, “negative” if the customer hates it, and “neutral” if there is no information. Review: <input_text>. Answer:
+
+3. Review: <input_text>. Select the correct sentiment of the review: (a) positive (good responses from customers), (b) negative (bad responses from customers), (c) neutral (no information available).
+```
 
 ## Parameter-Efficient Fine-Tuning (PEFT)
 
