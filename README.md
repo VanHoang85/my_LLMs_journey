@@ -59,6 +59,9 @@ Due to these difficulties, one will eventually move from hard prompts (i.e., man
 
 ## Instruction Fine-Tuning (IFT)
 
+> [!NOTE]
+> Strictly speaking, instructions refer to the guidances on what the models should perform while prompts are generally about the entire text, including test sample, demonstrations (if any), additional requirements (if any), restrictions (if any). However, literature on IFT often consider instructions as the entire text as inputs into the models for training. Therefore, I will use them interchangeably in my writing though I tend to use "instructions" with IFT and "prompts" for ICL/CoT.
+
 ### What is it?
 
 <img width="600" alt="vanilla FT versus instruction FT" src="https://github.com/VanHoang85/my_LLMs_journey/assets/38503004/c53c5d4d-88ca-4422-b8d7-f87efa93ac8d">
@@ -71,7 +74,7 @@ When using LLMs, all tasks are framed as generation problem, including classific
 
 ### Guide on instruction writing
 
-A task's instruction can be formulatted in different ways. For sentiment analysis, some examples are shown below, in which besides the wording of task, one can specify the output space as a list of labels, elaborate it with information, and/or make it like a cloze test. 
+A task's instruction can be formulatted in different ways. For sentiment analysis, some examples are shown below, in which besides the wording of task, one can (1) specify the output space as a list of labels, (2) elaborate the meaning with information, and/or (3) make it like a cloze test. 
 
 ```
 1. Predict the sentiment of the following text: <input_text>. Options are “positive”, “negative”, or “neutral”.
@@ -80,6 +83,49 @@ A task's instruction can be formulatted in different ways. For sentiment analysi
 
 3. Review: <input_text>. Select the correct sentiment of the review: (a) positive (good responses from customers), (b) negative (bad responses from customers), (c) neutral (no information available).
 ```
+
+Does it make any difference? Motivated by a similar question, Yin et al. (2023)[^7] conduct a systematic study to understand the role of task definitions in instruction learning. The authors define 8 categories of task definitions (as illustrated below), and manually annotate 100 samples of 757 training tasks and 119 unseen test tasks in the English portion of Natural Instruction dataset[^8]. Then, the models are re-trained with each category ablated out and the performance is measured on validation set with the same ablation.
+
+[^7]: Yin et al. 2023. Did You Read the Instructions? Rethinking the Effectiveness of Task Definitions in Instruction Learning. In ACL. https://aclanthology.org/2023.acl-long.172.pdf
+[^8]: Wang et al. 2022. Super-NaturalInstructions: Generalization via Declarative Instructions on 1600+ NLP Tasks. In EMNLP. https://aclanthology.org/2022.emnlp-main.340/
+
+<img width="600" alt="role of task instructions" src="https://github.com/VanHoang85/my_LLMs_journey/assets/38503004/f0f74e51-6a72-4a03-92b6-743f628c4fd5">
+
+The answers to their RQ1 (i.e., Which parts of task definitions are important when performing zero-shot instruction learning?) are as follow. Readers who are intereted in understanding instruction/prompt writing process are encouraged to read the entire paper. I myself enjoy it :).
+
+```
+1. For classification, label-related information is the most crucial since it helps identify the output space and each label's meaning when generalising to unseen tasks.
+2.  Additional details or constraints besides primary mentions of input and output, in general, do not improve model
+performance. As model size increases, additional details become important.
+3. Task definitions can be extensively compressed with no performance degradation, particularly for generation tasks.
+```
+
+### Do we really need instructions to fine-tune LLMs?
+
+Learning how to write instructions can sound overwhelming at first. And you might wonder whether it is possible to fine-tune the LLMs without instructions at all. The answer is yes; one can fine-tune LLMs using pairs of <input, output> similar to vanilla FT. However, there are advantages in using instructions, and it's not just because the skill of writing instructions can translate into better prompts for ICL.
+
+Gupta et al. (2023)[^9] show that ***IFT enable learning with limited data***:
+* In single-task setting, their instruction-tuned models only need 25% of downstream training data (~1k samples) to outperform the SOTA but non-instruction-tuned models trained with 100% data.
+* In multi-task setting, they only need 6% of data (~200 samples) for each task to get comparable results to the SOTA but non-instruction-tuned models trained with 100% data.
+
+[^9]: Gupta et al. 2023. Instruction Tuned Models are Quick Learners. arXiv:2306.05539 [cs]. https://arxiv.org/pdf/2306.05539.pdf
+
+Longpre et al. (2023) shows that ***IFT enhances single-task FT***:
+* When employing instruction-tuned Flan-T5 models as the starting checkpoint, the models converge more quickly and yield better results compared to non-instruction-tuned T5 models.
+  
+[^10]: Longpre et al. 2023. The Flan Collection: Designing Data and Methods for Effective Instruction Tuning. In ICML. https://proceedings.mlr.press/v202/longpre23a/longpre23a.pdf
+
+My personal experiences:
+* IFT does works with limited data. For my own tasks, IFT with 100-200 samples is already enough to either outperform or get comparable performance to GPT-3.5 using ICL. Furthermore, IFT often yields better results with more data while ICL performance is stable regardless of the number of demonstrations it can choose from.
+* Interested readers can check out on RAFT (Real-world Annotated Few-shot Tasks) leaderboard[^11], Schick et al. 2022[^12], and Liu et al. 2022[^13] in which the papers demonstrate IFT's learning capabilities with 50 samples, outperforming GPT-3 with ICL 0-shot.
+*  When I fine-tune on my own dataset of 4k samples using instruction-tuned Flan-T5-XXL (11B), it takes ~22 hours for the model to converge with vanilla FT while IFT only takes ~7 hours. Despite similar results on validation set, the difference in training time is enough to convince me to use instructions.
+*  You do get better at writing instructions and/or prompts :) Practice makes perfect.
+
+[^11]: https://huggingface.co/spaces/ought/raft-leaderboard
+[^12]: Schick et al. 2022. True Few-Shot Learning with Prompts—A Real-World Perspective. In Transactions of the Association for Computational Linguistics. https://aclanthology.org/2022.tacl-1.41/
+[^13]: Liu et al. 2022. Few-Shot Parameter-Efficient Fine-Tuning is Better and Cheaper than In-Context Learning. In NeurIPS. https://proceedings.neurips.cc/paper_files/paper/2022/file/0cde695b83bd186c1fd456302888454c-Paper-Conference.pdf
+
+
 
 ## Parameter-Efficient Fine-Tuning (PEFT)
 
