@@ -130,13 +130,11 @@ My personal experiences:
 As stated above, all tasks are framed as generation problem. Therefore, the models might generate ill-formed outputs. In my tasks, instead of generating class label, the models produce texts such as `I want to go I want to go` when fine-tuning with fewer than 100 samples.
 
 Moreover, a tip when choosing your base model is to pay attention to its default output formatting. For example:
+* __Given an instruction:__ Label the client utterance as either “change”, “neutral”, or “sustain”. Client: “I-I don't think I'm drinking that much. I mean, it's-it's mainly for social gatherings. Like it's nothing that I do, like by myself or whatever.” Answer:
+* __Flan-T5 prediction:__: change
+* __Llama 2 prediction:__: Based on the client's response, I would predict a Sustain attitude, indicating resistance against behaviour change. The client seems to downplay the amount of alcohol they consume, emphasizing that it's only for social gatherings and implying that they don't have a problem. This is a common way for individuals to resist changing their behaviours, as they may feel defensive or unwilling to acknowledge any potential issues. To further understand the client's attitudes and intentions, I would need to continue exploring this topic and assessing their level of motivation for change.
 
 ```
-__Given an instruction:__ Label the client utterance as either “change”, “neutral”, or “sustain”. Client: “I-I don't think I'm drinking that much. I mean, it's-it's mainly for social gatherings. Like it's nothing that I do, like by myself or whatever.” Answer:
-
-__Flan-T5 prediction:__: change
-
-__Llama 2 prediction:__: Based on the client's response, I would predict a Sustain attitude, indicating resistance against behaviour change. The client seems to downplay the amount of alcohol they consume, emphasizing that it's only for social gatherings and implying that they don't have a problem. This is a common way for individuals to resist changing their behaviours, as they may feel defensive or unwilling to acknowledge any potential issues. To further understand the client's attitudes and intentions, I would need to continue exploring this topic and assessing their level of motivation for change.
 ```
 
 As illustrated above, Llama 2's default is to output answers with explanations as a conversation. It's nice if we want our customers to interact directly with the model. However, if our purpose is to use the LLMs as an annotation tool or as a backend component, the chatty feature makes it difficult for us to extract the exact labels in the answer. It's possible to use regular expressions to extract all mentions of the labels. However, we still don't know the correct label is the first or second or third mention. 
