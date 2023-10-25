@@ -58,7 +58,7 @@ Due to these difficulties, one will eventually move from hard prompts (i.e., man
 [^5]: https://huggingface.co/docs/peft/conceptual_guides/prompting
 
 ## Instruction Fine-Tuning
-
+![Vanilla FT versus Instruction FT](https://github.com/VanHoang85/my_LLMs_journey/assets/38503004/c53c5d4d-88ca-4422-b8d7-f87efa93ac8d)
 <img width="776" alt="vanilla FT versus instruction FT" src="https://github.com/VanHoang85/my_LLMs_journey/assets/38503004/c53c5d4d-88ca-4422-b8d7-f87efa93ac8d">
 
 
