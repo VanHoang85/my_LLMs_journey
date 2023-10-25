@@ -26,7 +26,7 @@ Sentiment:
 ```
 
 **Chain-of_Thought** refers to the LLMs' abilities to perform tasks via a series of intermedia reasoning steps leading to the final coutcomes. To enable the reasoning capability, we add the phrase "Let’s think step by step." or "Give rationales before answering." into the prompt. An example is shown below (taken from Wang et al., 2023 [^1])
-[^1]: Wang et al. 2023. Towards Understanding Chain-of-Thought Prompting: An Empirical Study of What Matters. In ACL.
+[^1]: Wang et al. 2023. Towards Understanding Chain-of-Thought Prompting: An Empirical Study of What Matters. In ACL. https://aclanthology.org/2023.acl-long.153/
 
 ```
 Question: Leah had 32 chocolates and her sister had 42. If they ate 35, how many pieces do they have left in total?
@@ -37,7 +37,7 @@ Answer: Originally, Leah had 32 chocolates and her sister had 42. So, in total t
 
 
 ## Instruction Fine-Tuning
-[^1]
+
 
 ## Parameter-Efficient Fine-Tuning (PEFT)
 
@@ -45,4 +45,3 @@ Answer: Originally, Leah had 32 chocolates and her sister had 42. So, in total t
 ## Additional Resources
 
 
-## Reference
