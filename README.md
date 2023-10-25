@@ -61,7 +61,7 @@ Due to these difficulties, one will eventually move from hard prompts (i.e., man
 
 ### What is it?
 
-<img width="776" alt="vanilla FT versus instruction FT" src="https://github.com/VanHoang85/my_LLMs_journey/assets/38503004/c53c5d4d-88ca-4422-b8d7-f87efa93ac8d">
+<img width="500" alt="vanilla FT versus instruction FT" src="https://github.com/VanHoang85/my_LLMs_journey/assets/38503004/c53c5d4d-88ca-4422-b8d7-f87efa93ac8d">
 
 As depicted in the above figure on the left, vanilla FT for classification tasks on BERT/LSTM/RNN models requires having data points as pairs of <input, output>. After encoding the entire input sequence, BERT makes use of the first token of the last hidden state, aka the classification token <cls>, putting it through a softmax layer to obtain the prediction. The predictions are of numeric value and we thus need to map it to a label (e.g., positive or negative or neutral).
 
