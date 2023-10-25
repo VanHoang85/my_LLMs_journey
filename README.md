@@ -131,11 +131,8 @@ As stated above, all tasks are framed as generation problem. Therefore, the mode
 
 Moreover, a tip when choosing your base model is to pay attention to its default output formatting. For example:
 * __Given an instruction:__ Label the client utterance as either “change”, “neutral”, or “sustain”. Client: “I-I don't think I'm drinking that much. I mean, it's-it's mainly for social gatherings. Like it's nothing that I do, like by myself or whatever.” Answer:
-* __Flan-T5 prediction:__: change
-* __Llama 2 prediction:__: Based on the client's response, I would predict a Sustain attitude, indicating resistance against behaviour change. The client seems to downplay the amount of alcohol they consume, emphasizing that it's only for social gatherings and implying that they don't have a problem. This is a common way for individuals to resist changing their behaviours, as they may feel defensive or unwilling to acknowledge any potential issues. To further understand the client's attitudes and intentions, I would need to continue exploring this topic and assessing their level of motivation for change.
-
-```
-```
+* __Flan-T5 prediction:__ change
+* __Llama 2 prediction:__ Based on the client's response, I would predict a Sustain attitude, indicating resistance against behaviour change. The client seems to downplay the amount of alcohol they consume, emphasizing that it's only for social gatherings and implying that they don't have a problem. This is a common way for individuals to resist changing their behaviours, as they may feel defensive or unwilling to acknowledge any potential issues. To further understand the client's attitudes and intentions, I would need to continue exploring this topic and assessing their level of motivation for change.
 
 As illustrated above, Llama 2's default is to output answers with explanations as a conversation. It's nice if we want our customers to interact directly with the model. However, if our purpose is to use the LLMs as an annotation tool or as a backend component, the chatty feature makes it difficult for us to extract the exact labels in the answer. It's possible to use regular expressions to extract all mentions of the labels. However, we still don't know the correct label is the first or second or third mention. 
 
@@ -145,6 +142,48 @@ Therefore, I would highly recommend Flan-T5[^10] for classification tasks. The m
 
 ## Parameter-Efficient Fine-Tuning (PEFT)
 
+As it is too costly to fine-tune the entire LLMs, PEFT resolves this issue by training only a small set of parameters, which might be (a) a subset of existing model parameters, or (b) a set of newly added parameters[^15]. As depicted in the figure below, this is a very active research area since it enables the adaptation of open-sourced LLMs to our own tasks in a more efficient manner. The survey by Lialin et al. (2023) covers 30 methods in total as of February 2023.
+
+<img width="600" alt="peft" src="https://github.com/VanHoang85/my_LLMs_journey/assets/38503004/2469d7a9-7e67-4b7b-9dad-fa3bb6b9a412">
+[Image Source: Lialin et al., 2023](https://arxiv.org/pdf/2303.15647.pdf)
+
+Some common PEFT algorithms:
+* Prefix-tuning (soft prompts / additive): train task specific embeddings and add to hidden states of all layers.
+* BitFit (selective): train only the bias of the models.
+* LoRA (reparametrization-based): decompose the weight changes into two low-rank matrices for training.
+
+### LoRA (Low-Rank Adaptation)
+
+Among all the PEFT methods, one of the most popular is LoRA by Hu et al. (2022)[^16]. The main intuition is that instead of training the full-rank weight update matrix, we can break it into two smaller rank matrices W<sub>A</sub> and W<sub>B</sub> for faster training. 
+
+<img width="500" alt="image" src="https://github.com/VanHoang85/my_LLMs_journey/assets/38503004/ef5733f9-540c-49a0-adde-72073c856664">
+
+In the normal training (on the left), we obtain the weight update (𝛿𝑊) by timing the learning rate with the negative gradient of the loss. Then we update the original weight matrix W and caculate the hidden state.
+
+In LoRA, 𝛿𝑊 is broken down into W<sub>A</sub> and W<sub>B</sub> with a rank __r__ smaller than the dimension of both A and B. Then, we only need to do weight updates on these two matrices and compute the outputs for the hidden state separately. Sebastian Raschka (2023)[^17] wrote a great blog post on LoRA so interested readers are encouraged to go there for detailed explanation.
+
+Hu et al. (2022)[^16] shows that LoRA outperforms full training (i.e., GPT-3 with 175B) while adapting only 2% of the parameters (i.e., 37.7M).
+
+Some notes on LoRA hyper-parameters:
+* **alpha 𝛼** is a scaling factor to adjust the LoRA weights, which defaults to 1.
+* **rank r** controls the trade-off between model complexity and performance. Smaller rank leads to simpler matrices, meaning fewer parameters to learn, resulting faster training and less computational demands. LoRA's authors[^16] show in their paper that a rank of 1 is sufficient to obtain good performance. However, it might be the case that GPT-3 has already captured enough information for their test tasks. In other words, for your own tasks, you might need a higher rank to capture your task-specific information. 
+* which **weight matrices** one wants to apply LoRA to. Each Transformer layer has 4 self-attention modules W<sub>q</sub>, W<sub>k</sub>, W<sub>v</sub>, W<sub>o</sub>, and two MLP. Which modules which layer to use is up to you. The original paper experiments mostly with W<sub>q</sub> and W<sub>k</sub> on the last layer of the models for simplicity and parameter-efficient. However, some has found that finet-tuning all layers with all modules, and/or longer epochs yields better performance[^18].
+
+[^15]: Lialin et al. 2023. Scaling Down to Scale Up: A Guide to Parameter-Efficient Fine-Tuning. arXiv:2303.15647 [cs]. https://arxiv.org/pdf/2303.15647.pdf
+[^16]: Hu et al. 2022. LoRA: Low-Rank Adaptation of Large Language Models. In ICLR. https://arxiv.org/pdf/2106.09685.pdf
+[^17]: Sebastian Raschka. 2023. Parameter-Efficient LLM Finetuning with Low-Rank Adaptation. [https://lightning.ai/pages/community/tutorial/lora-llm/](https://lightning.ai/pages/community/tutorial/lora-llm/)
+[^18]: https://github.com/huggingface/peft/issues/622
+
+***To merge or not to merge...***
+After fine-tuning with LoRA, we can decide to keep the two matrices separately or we can merge them with the original matrix.
+
+If we decide to keep them serpately, inference time increases due to additional computational steps. Using PEFT library on huggingface platform, similar to [this post](https://github.com/huggingface/peft/issues/217), I do feel inference time is like 10x slower, compared with ICL. After merging the LoRA weights and the original weights, inference time is fater but still ~2 times slower compared to ICL using original non-LoRA models. Hu et al. (2022)[^16] argues that the merged models incur no additional latency costs. Therefore, this issue might be due to implementation.
+
+However, if we opt for merging, then instead of storing just the adapter weights, which is often very small (e.g., < 100MB), we have to store the full models (e.g., ~45GB for Flan-T5-XXL models). Image that you have 10 tasks, training and storing 10 LoRA adapters takes 100MB x 10 = ~1GB. On the other hands, merging helps with latency but you have to store 45GB x 10 = 450 GB.
+
+Another caveat is that, even though PEFT[^15] is supposed to change only a subset of the model's weights. With prompt-tuning, you literally don't touch the model weights at all and only optimise the prompt embeddings. With BitFit, you change only the bias of the models. LoRA, however, means that you do change the entire model weights, just in a smart way. With that said, the LoRA-adapted models might have unexpected performance on unseen tasks. Imagine you have 10 tasks: ICL performance on 5 tasks is good enough but not the other 5. Therefore, you decide to fine-tune on the other 5 tasks and obtain improved performance as expected. Yet, what about the performance on the first 5 tasks now that you have overwritten the original weights? 
+
+For this reason, it's more common to have a separate LoRA adapter for each task. Still, I think one of the advantages of IFT is its capabilities in a multi-task setting, and I do hope the research community will figure out new PEFT/LoRA methods for multi-task learning without incurring high costs.
 
 ## Additional Resources
 
