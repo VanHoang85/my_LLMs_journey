@@ -42,13 +42,13 @@ Answer: Originally, Leah had 32 chocolates and her sister had 42. So, in total t
 
 Crafting perfect prompts is a ***non-trivial*** task. If you only have a few test cases, then you can quickly assess the prompts' performance. However, when dealing with traditional NLP tasks, we are more likely to deal with thousand test samples. My own experience when using GPT-3.5 is that just adding or removing the formatting request (e.g., "Format the output as a dictionary with 'Answer' and 'Reasoning' as keys") can change the final answer when it shouldn't be the case.
 
-More importantly, for ICL, the prompt format, the number, the choice, and the order of the demonstrations can lead to different results, from near SOTA to near random guess (Zhao et al. 2021[^2]). The authors discover several biases of GPT-3 when performing classification tasks to explain this brittleness phenomenon of prompt engeering. One of the bias is the majority label bias, meaning that GPT-3 simply repeats the only label of the demonstration in ICL 1-shot, which exaplains a drop in performance when moving from ICL 0-shot to 1-shot. However, when playing around with GPT-3.5 for my own classification task, I didn't observe this bias at all: out of 600 samples, GPT-3.5 only repeats the label in ~60 times. Such difference might be due to an upgrade from GPT-3 to GPT-3.5. Adding more demonstrations, unfortunately, does not necessarily lead to better results.
+More importantly, for ICL, ***the prompt format, the number, the choice, and the order of the demonstrations can lead to different results, from near SOTA to near random guess*** (Zhao et al. 2021[^2]). The authors discover several biases of GPT-3 when performing classification tasks to explain this brittleness phenomenon of prompt engeering. One of the bias is the majority label bias, meaning that GPT-3 simply repeats the only label of the demonstration in ICL 1-shot, which exaplains a drop in performance when moving from ICL 0-shot to 1-shot. However, when playing around with GPT-3.5 for my own classification task, I didn't observe this bias at all: out of 600 samples, GPT-3.5 only repeats the label in ~60 times. Such difference might be due to an upgrade from GPT-3 to GPT-3.5. Adding more demonstrations, unfortunately, does not necessarily lead to better results.
 
 [^2]: Zhao et al. 2021. Calibrate Before Use: Improving Few-shot Performance of Language Models. In ICML. https://proceedings.mlr.press/v139/zhao21c/zhao21c.pdf
 
-For CoT, it mostly benefits complicated reasoning tasks such as math and with large models (e.g. 50B+ parameters) while simple tasks only benefit slightly from CoT prompting[^3]. The question is whether CoT helps with traditional NLP tasks. My observation is that when dealing with tasks that need expert knowledge (e.g., psychotherapy), unless one can check the rationales themselves, it will take a huge amount of time, effort, and costs to hire experts for verification purposes. However, Wang et al. (2023)[^1] recently show that prompting the models with invalid reasoning steps can still achieve 80-90% performance of CoT using valid and sound reasoning. 
+For CoT, it ***mostly benefits complicated reasoning tasks such as math and with large models*** (e.g. 50B+ parameters) while simple tasks only benefit slightly from CoT prompting[^3]. The question is whether CoT helps with traditional NLP tasks. My observation is that when dealing with tasks that need expert knowledge (e.g., psychotherapy), unless one can check the rationales themselves, it will take a huge amount of time, effort, and costs to hire experts for verification purposes. 
 
-Additionally, best performing prompts often are semantically incoherent, task-irrelevant, unintuitive to humans, or even misleading (Prasad et al. 2023[^4]). If we put effort in collecting reasoning steps or crafting prompts, of course we want them to be useful. Yet, these findings raise the question of whether the models can really understand the reasoning and the demonstrations at all, and whether it is worths our efforts after all.
+However, Wang et al. (2023)[^1] recently show that prompting the models with invalid reasoning steps can still achieve 80-90% performance of CoT using valid and sound reasoning. Additionally, ***best performing prompts often are semantically incoherent, task-irrelevant, unintuitive to humans, or even misleading*** (Prasad et al. 2023[^4]). If we put effort in collecting reasoning steps or crafting prompts, of course we want them to be useful. Yet, these findings raise the question of whether the models can really understand the reasoning and the demonstrations at all, and whether it is worth our efforts after all.
 
 [^3]: Lilian Weng. 2023. Prompt Engineering. https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/
 [^4]: Prasad et al. 2023. GrIPS: Gradient-free, Edit-based Instruction Search for Prompting Large Language Models. In EACL. https://aclanthology.org/2023.eacl-main.277/
@@ -125,7 +125,25 @@ My personal experiences:
 [^12]: Schick et al. 2022. True Few-Shot Learning with Prompts—A Real-World Perspective. In Transactions of the Association for Computational Linguistics. https://aclanthology.org/2022.tacl-1.41/
 [^13]: Liu et al. 2022. Few-Shot Parameter-Efficient Fine-Tuning is Better and Cheaper than In-Context Learning. In NeurIPS. https://proceedings.neurips.cc/paper_files/paper/2022/file/0cde695b83bd186c1fd456302888454c-Paper-Conference.pdf
 
+### Undesirable Outputs
 
+As stated above, all tasks are framed as generation problem. Therefore, the models might generate ill-formed outputs. In my tasks, instead of generating class label, the models produce texts such as `I want to go I want to go` when fine-tuning with fewer than 100 samples.
+
+Moreover, a tip when choosing your base model is to pay attention to its default output formatting. For example:
+
+```
+__Given an instruction:__ Label the client utterance as either “change”, “neutral”, or “sustain”. Client: “I-I don't think I'm drinking that much. I mean, it's-it's mainly for social gatherings. Like it's nothing that I do, like by myself or whatever.” Answer:
+
+__Flan-T5 prediction:__: change
+
+__Llama 2 prediction:__: Based on the client's response, I would predict a Sustain attitude, indicating resistance against behaviour change. The client seems to downplay the amount of alcohol they consume, emphasizing that it's only for social gatherings and implying that they don't have a problem. This is a common way for individuals to resist changing their behaviours, as they may feel defensive or unwilling to acknowledge any potential issues. To further understand the client's attitudes and intentions, I would need to continue exploring this topic and assessing their level of motivation for change.
+```
+
+As illustrated above, Llama 2's default is to output answers with explanations as a conversation. It's nice if we want our customers to interact directly with the model. However, if our purpose is to use the LLMs as an annotation tool or as a backend component, the chatty feature makes it difficult for us to extract the exact labels in the answer. It's possible to use regular expressions to extract all mentions of the labels. However, we still don't know the correct label is the first or second or third mention. 
+
+Therefore, I would highly recommend Flan-T5[^10] for classification tasks. The models are trained on 1k8+ NLP tasks and are shown to outperform other models with the same size up to 26% performance gain. There are 5 total models in the Flan-T5 family, ranging from 80M to 11B parameters[^14]. Additionally, Flan-T5's outputs are the labels themselves, unless you explicitly ask the models to generate reasoning. That means, if the models halluciate, you can simply replace the ill-formed outputs with a random label using regular expressions.
+
+[^14]: https://huggingface.co/docs/transformers/model_doc/flan-t5
 
 ## Parameter-Efficient Fine-Tuning (PEFT)
 
