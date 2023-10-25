@@ -9,15 +9,18 @@ Abstract: In a very short amount of time, large language models (LLMs) have seem
 
 ## Why Fine-Tuning?
 
+### What are ICL and CoT?
 There are two most popular padadigms to use with LLMs as they are without doing any parameter updates on the models' weights: In-Context Learning (ICL) and Chain-of-Thought (CoT).
 
 ***In-Context Learning*** refers to the LLMs' abilities to learn to perform new tasks solely by "observing" the examples, or demonstrations, shown in the prompt. Strictly speaking, ICL doesn't include instructions, aka how the models should perform the task, in the prompt. If it does, then we call it **Instruction Following**. However, this distinction has become quite blur since prompts need both to yield good results on unseen tasks. Therefore, I will refer to ICL as if having instructions already. We call ICL _n_-shot if there are _n_ demonstrations in the prompt. Below is an example of ICL 2 shot:
 ```
 Label the following review with either “positive” or “negative”.
 
+Example 1:
 Text: The price is a bit expensive, but the food is excellent!
 Sentiment: positive.
 
+Example 2:
 Text: Food is good but the waiter is just rude to us!!!
 Sentiment: negative
 
@@ -34,6 +37,18 @@ Let’s think step by step.
 
 Answer: Originally, Leah had 32 chocolates and her sister had 42. So, in total they had 32 + 42 = 74. After eating 35, they had 74 - 35 = 39 pieces left in total. The answer is 39.
 ```
+
+### What are their disadvantages?
+
+Crafting perfect prompts is a ***non-trivial*** task. If you only have a few test cases, then you can quickly assess the prompts' performance. However, when dealing with traditional NLP tasks, we are more likely to deal with thousand test samples. My own experience when using GPT-3.5 is that just adding or removing the formatting request (e.g., "Format the output as a dictionary with 'Answer' and 'Reasoning' as keys") can change the final answer when it shouldn't be the case.
+
+More importantly, for ICL, the prompt format, the number, the choice, and the order of the demonstrations can lead to different results, from near SOTA to near random guess (Zhao et al. 2021)[^2]. The authors discover several biases of GPT-3 when performing classification tasks to explain this brittleness phenomenon of prompt engeering. One of the bias is the majority label bias, meaning that GPT-3 simply repeats the only label of the demonstration in ICL 1-shot, which exaplains a drop in performance when moving from ICL 0-shot to 1-shot. However, when playing around with GPT-3.5 for my own classification task, I didn't observe this bias at all: out of 600 samples, GPT-3.5 only repeats the label in ~60 times. Such difference might be due to an upgrade from GPT-3 to GPT-3.5. Adding more demonstrations, unfortunately, does not necessarily lead to better results.
+
+[^2]: Zhao et al. 2021. Calibrate Before Use: Improving Few-shot Performance of Language Models. In ICML. https://proceedings.mlr.press/v139/zhao21c/zhao21c.pdf
+
+For CoT, it mostly benefits complicated reasoning tasks such as math and with large models (e.g. 50B+ parameters) while simple tasks only benefit slightly from CoT prompting [^3]. The question is whether CoT helps with traditional NLP tasks. My observation is that when dealing with tasks that need expert knowledge (e.g., psychotherapy), unless one can check the rationales themselves, it will take a huge amount of time, effort, and costs to hire experts for verification purposes. However, Wang et al. (2023) [^1] recently show that prompting the models with invalid reasoning steps can still achieve 80-90% performance of CoT using valid and sound reasoning. If we put effort in collecting reasoning steps, of course we want them to be useful. Yet, these findings raise the question of whether the models can really understand the reasoning at all, and whether it is worths our efforts at all.
+
+[^3]: Lilian Weng. 2023. Prompt Engineering. https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/
 
 
 ## Instruction Fine-Tuning
