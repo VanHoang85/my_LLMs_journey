@@ -170,7 +170,8 @@ Some common PEFT algorithms:
 
 Among all the PEFT methods, one of the most popular is LoRA by Hu et al. (2022)[^16]. The main intuition is that instead of training the full-rank weight update matrix, we can break it into two smaller rank matrices W<sub>A</sub> and W<sub>B</sub> for faster training. 
 
-<img width="500" alt="image" src="https://github.com/VanHoang85/my_LLMs_journey/assets/38503004/ef5733f9-540c-49a0-adde-72073c856664">
+<img width="500" alt="image" src="https://github.com/VanHoang85/my_LLMs_journey/assets/38503004/844a4f77-0537-4133-ba6d-c59360ca7e1f">
+
 
 In the normal training (on the left), we obtain the weight update (𝛿𝑊) by timing the learning rate with the negative gradient of the loss. Then we update the original weight matrix W and caculate the hidden state.
 
@@ -252,6 +253,18 @@ model = get_peft_model(model, config)
 model.print_trainable_parameters()
 ```
 
+Currently, HF's peft doesn't give you an option to conveniently choose which modules or layers to apply LoRA on. To apply on all modules and layers, you can:
+
+```
+target_modules = [name for name, layer in model.named_modules() if isinstance(layer, torch.nn.Linear)]
+config = LoraConfig(r=8,  # rank
+                    lora_alpha=16,  # scaling factor
+                    target_modules=target_modules
+                    lora_dropout=0.05,
+                    inference_mode=False,
+                    task_type=TaskType.SEQ_2_SEQ_LM)
+```
+
 Detail examples about fine-tuning models on peft can be found [here](https://www.philschmid.de/fine-tune-flan-t5-peft#3-fine-tune-t5-with-lora-and-bnb-int-8) and [here](https://github.com/huggingface/peft/tree/main/examples).
 
 ## Additional Resources
@@ -265,3 +278,7 @@ Other PEFT platforms:
 * [Adapter-Hub](https://github.com/Adapter-Hub/adapter-transformers)
 * [LLM-Adapters](https://github.com/AGI-Edgerunners/LLM-Adapters)
 
+My personal recommendations about LLMs (in addition to the footnote/references):
+* [The anti-hype LLM reading list](https://gist.github.com/veekaybee/be375ab33085102f9027853128dc5f0e)
+* [Kaddour et al. 2023. Challenges and Applications of Large Language Models. arXiv:2307.10169 [cs]](https://arxiv.org/pdf/2307.10169.pdf): it requires some background knowledge on LLMs so it's more suitable for medium and advanced readers. 
+* [Yang et al. 2023. Harnessing the Power of LLMs in Practice: A Survey on ChatGPT and Beyond. arXiv:2304.13712 [cs].](https://arxiv.org/pdf/2304.13712.pdf): Provide a practical guide on whether you can take advantages of the LLMs' power or you'd better off sticking to the traditional DL models.
