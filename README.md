@@ -192,14 +192,53 @@ Answer: Yes, yes, yes.
 
 ***Loading LLMs***
 
-https://huggingface.co/docs/transformers/v4.32.1/en/main_classes/model#large-model-loading
+On HuggingFace ecosystem, from Transformers 4.20.0, it supports [loading large models more efficiently](https://huggingface.co/docs/transformers/v4.32.1/en/main_classes/model#large-model-loading).
 
-https://huggingface.co/docs/transformers/v4.20.1/en/perf_train_gpu_one
+```
+from transformers import AutoModelForSeq2SeqLM
+
+model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-xxl", torch_dtype="auto", low_cpu_mem_usage=True, device_map="auto", load_in_8bit=True)
+```
+
+Argument information:
+* **torch_dtype**: load the models in the desired `dtype`. With `auto`, it loads in the most optimal memory pattern.
+* **low_cpu_mem_usage**: if `False`, we need twice the size of the model in RAM because it creates the full model, then loads the pretrained weights inside it. If `True`, we create the model as an empty shell, then only materialize its parameters when the pretrained weights are loaded.
+* **device_map**: if `auto`, it optimises the loading of the models by splitting it across multiple devices. However, its default option means that it always tries to make use of all devices even though we can fit it in one GPU. As a result, it might throw an out-of-memory error. For example, ADAP-CLIN has 2 GPUs: Your model can fit into the other GPU but because of the activated `auto` argument, it tries to load your model in both GPUs but because one is being occupied, you get an error. The solution is to deactive this argument and use **low_cpu_mem_usage** to load on one GPU only.
+* **load_in_8bit**: most models are trained in either 32 bit or 16 bit precision. However, one can quantize them into 8 bit (or 4 bit using **load_in_4bit** instead). Currently, you can only do inference when loaded in 4bit, not training. By rule of thumb, one needs half of the memory when loaded in 8 bit, and a quarter when loaded in 4 bit.
+  * Flan-T5-XXL (11B) is 45GB in size. Loaded in 8bit: 17 GB. Loaded in 4 bit: 13.5 GB.
+  * Llama 2 (13B) is 27GB in size. Loaded in 8bit: 13.5 GB. Loaded in 4 bit: 7 GB.
+
+Detailed guidelines about [how to load large models](https://huggingface.co/docs/transformers/v4.32.1/en/main_classes/model#large-model-loading), [how to train LLMs on 1 GPU](https://huggingface.co/docs/transformers/v4.20.1/en/perf_train_gpu_one) and [how to quantize LLMs models](https://huggingface.co/docs/transformers/main/en/main_classes/quantization).
 
 ***Training with PEFT***
 
-https://www.philschmid.de/fine-tune-flan-t5-peft#3-fine-tune-t5-with-lora-and-bnb-int-8
-https://github.com/huggingface/peft/tree/main/examples
+[PEFT library on huggingface](https://huggingface.co/docs/peft/index) is currently supporting 7 peft methods, including LoRA. To fine-tune the models with a supported method, in addition to loading and processing the dataset, loading the base model, we need to load the desired peft config and convert to peft model, which has been well supported by huggingface:
+
+```
+from transformers import AutoModelForSeq2SeqLM
+from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training, TaskType
+
+# load the model
+model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-xxl",
+                                                  load_in_8bit=True,
+                                                  device_map="auto")
+# define LoRA Config
+config = LoraConfig(r=8,  # rank
+                    lora_alpha=16,  # scaling factor
+                    target_modules=["q", "v"],   # specify weight modules
+                    lora_dropout=0.05,
+                    inference_mode=False,
+                    task_type=TaskType.SEQ_2_SEQ_LM)
+
+# prepare model for training
+model = prepare_model_for_kbit_training(model)
+
+# add LoRA adaptor
+model = get_peft_model(model, config)
+model.print_trainable_parameters()
+```
+
+Detail examples about fine-tuning models on peft can be found [here](https://www.philschmid.de/fine-tune-flan-t5-peft#3-fine-tune-t5-with-lora-and-bnb-int-8) and [here](https://github.com/huggingface/peft/tree/main/examples).
 
 ## Additional Resources
 
