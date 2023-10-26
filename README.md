@@ -144,8 +144,8 @@ Therefore, I would highly recommend Flan-T5[^10] for classification tasks. The m
 
 As it is too costly to fine-tune the entire LLMs, PEFT resolves this issue by training only a small set of parameters, which might be (a) a subset of existing model parameters, or (b) a set of newly added parameters[^15]. As depicted in the figure below, this is a very active research area since it enables the adaptation of open-sourced LLMs to our own tasks in a more efficient manner. The survey by Lialin et al. (2023) covers 30 methods in total as of February 2023.
 
-<img width="600" alt="peft" src="https://github.com/VanHoang85/my_LLMs_journey/assets/38503004/2469d7a9-7e67-4b7b-9dad-fa3bb6b9a412">
 [Image Source: Lialin et al., 2023](https://arxiv.org/pdf/2303.15647.pdf)
+<img width="600" alt="peft" src="https://github.com/VanHoang85/my_LLMs_journey/assets/38503004/2469d7a9-7e67-4b7b-9dad-fa3bb6b9a412">
 
 Some common PEFT algorithms:
 * Prefix-tuning (soft prompts / additive): train task specific embeddings and add to hidden states of all layers.
@@ -185,7 +185,30 @@ Another caveat is that, even though PEFT[^15] is supposed to change only a subse
 
 For this reason, it's more common to have a separate LoRA adapter for each task. Still, I think one of the advantages of IFT is its capabilities in a multi-task setting, and I do hope the research community will figure out new PEFT/LoRA methods for multi-task learning without incurring high costs.
 
+## Loading and Training LLMs with limited resources
+
+Question: Is it possible to fine-tune open-source LLMs on TUD's cluster?
+Answer: Yes, yes, yes.
+
+***Loading LLMs***
+
+https://huggingface.co/docs/transformers/v4.32.1/en/main_classes/model#large-model-loading
+
+https://huggingface.co/docs/transformers/v4.20.1/en/perf_train_gpu_one
+
+***Training with PEFT***
+
+https://www.philschmid.de/fine-tune-flan-t5-peft#3-fine-tune-t5-with-lora-and-bnb-int-8
+https://github.com/huggingface/peft/tree/main/examples
+
 ## Additional Resources
 
+For prompt/instruction writing:
+* The course “ChatGPT Prompt Engineering for Developers” on [deepLearning.ai](https://www.deeplearning.ai/short-courses/).
+* [OpenAI cookbook](https://github.com/openai/openai-cookbook/tree/main)
+* [promptsource](https://github.com/bigscience-workshop/promptsource), which is a library to create and share promots among developers. It is compatible with huggingface ecosystem in which you can load a dataset from their database and then load all shared prompts for this dataset using `promptsource`.
 
-## References
+Other PEFT platforms:
+* [Adapter-Hub](https://github.com/Adapter-Hub/adapter-transformers)
+* [LLM-Adapters](https://github.com/AGI-Edgerunners/LLM-Adapters)
+
