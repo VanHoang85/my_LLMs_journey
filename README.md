@@ -6,6 +6,20 @@ Abstract: In a very short amount of time, large language models (LLMs) have seem
 > [!NOTE]
 > This does not mean that I'm denying the other aprroachs such as ICL or CoT, or the power of close sourced LLMs such as GPT-3.5/4. Of course if you don't have a coding background, then learning how to use GPT family is much easier than educating yourself on how to use, for example huggingface ecosystem. However, if you already know how to write models using transformers library, then, my main argument is that for traditional NLP tasks, fine-tuning is still cheaper, more efficient, and more stable than learning how to craft perfect prompts for your entire test set, especially when you have thousands of test samples.
 
+# Table of Contents
+
+1. [Why Fine-Tuning?](https://github.com/VanHoang85/my_LLMs_journey/tree/main#why-fine-tuning)
+   * [What are ICL and CoT?](https://github.com/VanHoang85/my_LLMs_journey/tree/main#what-are-icl-and-cot)
+   * [What are their disadvantages?](https://github.com/VanHoang85/my_LLMs_journey/tree/main#what-are-their-disadvantages)
+2. [Instruction Fine-Tuning](https://github.com/VanHoang85/my_LLMs_journey/tree/main#instruction-fine-tuning-ift)
+   * [What are instructions?](https://github.com/VanHoang85/my_LLMs_journey/tree/main#what-is-it)
+   * [Guide on instruction writing](https://github.com/VanHoang85/my_LLMs_journey/tree/main#guide-on-instruction-writing)
+   * [Do we really need instructions to fine-tune LLMs?](https://github.com/VanHoang85/my_LLMs_journey/tree/main#do-we-really-need-instructions-to-fine-tune-llms)
+   * [Undesirable outputs](https://github.com/VanHoang85/my_LLMs_journey/tree/main#undesirable-outputs)
+3. [Parameter-Efficient Fine-Tuning](https://github.com/VanHoang85/my_LLMs_journey/tree/main#parameter-efficient-fine-tuning-peft)
+   * [Low-Rank Adaptation](https://github.com/VanHoang85/my_LLMs_journey/tree/main#lora-low-rank-adaptation)
+4. [Loading and Training LLMs with Limited Resources](https://github.com/VanHoang85/my_LLMs_journey/tree/main#loading-and-training-llms-with-limited-resources)
+5. [Additional Resources](https://github.com/VanHoang85/my_LLMs_journey/tree/main#additional-resources)
 
 ## Why Fine-Tuning?
 
@@ -190,7 +204,7 @@ For this reason, it's more common to have a separate LoRA adapter for each task.
 Question: Is it possible to fine-tune open-source LLMs on TUD's cluster?
 Answer: Yes, yes, yes.
 
-***Loading LLMs***
+###Loading LLMs
 
 On HuggingFace ecosystem, from Transformers 4.20.0, it supports [loading large models more efficiently](https://huggingface.co/docs/transformers/v4.32.1/en/main_classes/model#large-model-loading).
 
@@ -210,7 +224,7 @@ Argument information:
 
 Detailed guidelines about [how to load large models](https://huggingface.co/docs/transformers/v4.32.1/en/main_classes/model#large-model-loading), [how to train LLMs on 1 GPU](https://huggingface.co/docs/transformers/v4.20.1/en/perf_train_gpu_one) and [how to quantize LLMs models](https://huggingface.co/docs/transformers/main/en/main_classes/quantization).
 
-***Training with PEFT***
+###Training with PEFT
 
 [PEFT library on huggingface](https://huggingface.co/docs/peft/index) is currently supporting 7 peft methods, including LoRA. To fine-tune the models with a supported method, in addition to loading and processing the dataset, loading the base model, we need to load the desired peft config and convert to peft model, which has been well supported by huggingface:
 
