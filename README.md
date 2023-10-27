@@ -254,7 +254,7 @@ model = get_peft_model(model, config)
 model.print_trainable_parameters()
 ```
 
-Currently, HF's peft doesn't give you an option to conveniently choose which modules or layers to apply LoRA on. To apply on all modules and layers, you can:
+By default, you apply LoRA on W_q and Q_v and on the last layer only. Currently, HF's peft doesn't give you an option to conveniently choose which modules or layers to apply LoRA on. To apply on all modules and layers, you can:
 
 ```
 target_modules = [name for name, layer in model.named_modules() if isinstance(layer, torch.nn.Linear)]
