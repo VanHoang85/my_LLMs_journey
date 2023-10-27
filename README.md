@@ -266,6 +266,8 @@ config = LoraConfig(r=8,  # rank
                     task_type=TaskType.SEQ_2_SEQ_LM)
 ```
 
+Sebastian Raschka wrote a blog post to document [his experiences after running thousands LoRA experiments](https://lightning.ai/pages/community/lora-insights/).
+
 Detail examples about fine-tuning models on peft can be found [here](https://www.philschmid.de/fine-tune-flan-t5-peft#3-fine-tune-t5-with-lora-and-bnb-int-8) and [here](https://github.com/huggingface/peft/tree/main/examples).
 
 ## Additional Resources
